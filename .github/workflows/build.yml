@@ -1,25 +1,41 @@
-name: GitHub Actions Build
+name: Secure Build Pipeline
 
 on:
   pull_request:
-    branches: [ main ]
+    branches: [ "main" ]
 
 jobs:
-  build:
+  build-and-sast:
     runs-on: ubuntu-latest
-    container: eclipse-temurin:21-jdk
-
+    
     steps:
+      # 1. подготовка кодика
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set permissions
-        run: chmod +x mvnw
+      # 2. сборочка (пзха 2) в контейнере JDK 21
+      - name: Build with Maven
+        uses: addnab/docker-run-action@v3
+        with:
+          image: eclipse-temurin:21-jdk
+          options: -v ${{ github.workspace }}:/work -w /work
+          run: |
+            chmod +x mvnw
+            ./mvnw package -DskipTests
 
-      - name: Build and Package
-        run: ./mvnw package -DskipTests
+      # 3. SAST скан (пзха 3)
+      - name: Semgrep SAST scan
+        run: |
+          docker run --rm -v $(pwd):/src returntocorp/semgrep semgrep scan --config auto --sarif --output report.sarif
 
-      - name: Upload Artifact
+      # 4. загрузка отчета в GitHub Security (пзха 3)
+      - name: Upload SARIF report
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: report.sarif
+
+      # 5. сохран. JAR как артефакта (пзха 2)
+      - name: Upload Build Artifact
         uses: actions/upload-artifact@v4
         with:
           name: application-jar
