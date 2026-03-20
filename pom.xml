@@ -94,7 +94,7 @@
                 </configuration>
             </plugin>
 
-            <!-- ПЛАГИН ДЛЯ ЛАБЫ №4 (SCA) -->
+            <!-- ПЛАГИН ДЛЯ ЛАБЫ №4 (SCA) С ИСПРАВЛЕНИЕМ ОШИБОК 401/429 -->
             <plugin>
                 <groupId>org.owasp</groupId>
                 <artifactId>dependency-check-maven</artifactId>
@@ -103,6 +103,9 @@
                     <formats>
                         <format>HTML</format>
                     </formats>
+                    <!-- ОТКЛЮЧАЕМ анализатор Sonatype OSS Index, который вызывает сбои в облаке -->
+                    <ossIndexAnalyzerEnabled>false</ossIndexAnalyzerEnabled>
+                    <failOnError>false</failOnError>
                 </configuration>
                 <executions>
                     <execution>
