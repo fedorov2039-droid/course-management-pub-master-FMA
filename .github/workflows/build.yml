@@ -5,37 +5,42 @@ on:
     branches: [ "main" ]
 
 jobs:
-  build-and-sast:
+  build-test-security:
     runs-on: ubuntu-latest
-    
+
     steps:
-      # 1. подготовка кодика
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. сборочка (пзха 2) в контейнере JDK 21
+      # сборка
       - name: Build with Maven
-        uses: addnab/docker-run-action@v3
-        with:
-          image: eclipse-temurin:21-jdk
-          options: -v ${{ github.workspace }}:/work -w /work
-          run: |
-            chmod +x mvnw
-            ./mvnw package -DskipTests
+        run: |
+          chmod +x mvnw
+          ./mvnw package -DskipTests
 
-      # 3. SAST скан (пзха 3)
+      # SAST (пз 3)
       - name: Semgrep SAST scan
         run: |
           docker run --rm -v $(pwd):/src returntocorp/semgrep semgrep scan --config auto --sarif --output report.sarif
 
-      # 4. загрузка отчета в GitHub Security (пзха 3)
-      - name: Upload SARIF report
+      - name: Upload SAST report
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: report.sarif
 
-      # 5. сохран. JAR как артефакта (пзха 2)
-      - name: Upload Build Artifact
+      # SCA (пз 4)
+      - name: Dependency Check SCA
+        run: |
+          ./mvnw dependency-check:check
+
+      - name: Upload SCA Report
+        uses: actions/upload-artifact@v4
+        with:
+          name: sca-report
+          path: target/dependency-check-report.html
+
+      # Сохранение JAR (пз 2)
+      - name: Upload Jar
         uses: actions/upload-artifact@v4
         with:
           name: application-jar

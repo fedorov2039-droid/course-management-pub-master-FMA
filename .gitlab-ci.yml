@@ -27,11 +27,21 @@ sast-semgrep:
     - linux
     - bas2301
   script:
-    # Добавляем сканирование текущей папки (.) и конфиг auto
     - semgrep scan --config auto --sarif --output report.sarif .
   artifacts:
     reports:
       sast: report.sarif
+
+# НОВАЯ РАБОТА ДЛЯ пз4 (SCA)
+sca-dependency-check:
+  stage: test
+  image: maven:3.9-eclipse-temurin-21
+  tags:
+    - linux
+    - bas2301
+  script:
+    - ./mvnw dependency-check:check
+  artifacts:
     paths:
-      - report.sarif
+      - target/dependency-check-report.html
     expire_in: 1 week
