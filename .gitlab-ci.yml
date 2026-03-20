@@ -6,6 +6,7 @@ stages:
   - build
   - test
 
+# Сборка
 build-job:
   stage: build
   image: eclipse-temurin:21-jdk
@@ -20,9 +21,10 @@ build-job:
       - target/*.jar
     expire_in: 1 week
 
+# SAST (пз 3)
 sast-semgrep:
   stage: test
-  image: returntocorp/semgrep
+  image: semgrep/semgrep  # Используем обновленный образ
   tags:
     - linux
     - bas2301
@@ -31,8 +33,10 @@ sast-semgrep:
   artifacts:
     reports:
       sast: report.sarif
+    paths:
+      - report.sarif
 
-# НОВАЯ РАБОТА ДЛЯ пз4 (SCA)
+# SCA (пз 4)
 sca-dependency-check:
   stage: test
   image: maven:3.9-eclipse-temurin-21
@@ -40,6 +44,7 @@ sca-dependency-check:
     - linux
     - bas2301
   script:
+    - chmod +x mvnw
     - ./mvnw dependency-check:check
   artifacts:
     paths:

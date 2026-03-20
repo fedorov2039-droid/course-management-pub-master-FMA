@@ -12,16 +12,25 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # сборка
+      # Принудительно ставим Java 21 (исправляет ошибку release version 21)
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Grant execute permission for mvnw
+        run: chmod +x mvnw
+
+      # Сборка (пз 2)
       - name: Build with Maven
-        run: |
-          chmod +x mvnw
-          ./mvnw package -DskipTests
+        run: ./mvnw package -DskipTests
 
       # SAST (пз 3)
       - name: Semgrep SAST scan
         run: |
-          docker run --rm -v $(pwd):/src returntocorp/semgrep semgrep scan --config auto --sarif --output report.sarif
+          docker run --rm -v $(pwd):/src semgrep/semgrep semgrep scan --config auto --sarif --output report.sarif
 
       - name: Upload SAST report
         uses: github/codeql-action/upload-sarif@v3
@@ -30,8 +39,7 @@ jobs:
 
       # SCA (пз 4)
       - name: Dependency Check SCA
-        run: |
-          ./mvnw dependency-check:check
+        run: ./mvnw dependency-check:check
 
       - name: Upload SCA Report
         uses: actions/upload-artifact@v4
