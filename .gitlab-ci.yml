@@ -6,7 +6,6 @@ stages:
   - build
   - test
 
-# Сборка
 build-job:
   stage: build
   image: eclipse-temurin:21-jdk
@@ -21,10 +20,9 @@ build-job:
       - target/*.jar
     expire_in: 1 week
 
-# SAST (пз 3)
 sast-semgrep:
   stage: test
-  image: semgrep/semgrep  # Используем обновленный образ
+  image: semgrep/semgrep
   tags:
     - linux
     - bas2301
@@ -33,10 +31,7 @@ sast-semgrep:
   artifacts:
     reports:
       sast: report.sarif
-    paths:
-      - report.sarif
 
-# SCA (пз 4)
 sca-dependency-check:
   stage: test
   image: maven:3.9-eclipse-temurin-21
@@ -49,4 +44,22 @@ sca-dependency-check:
   artifacts:
     paths:
       - target/dependency-check-report.html
+
+# пзха 5: DAST (Динамический анализ)
+dast-zap:
+  stage: test
+  image:
+    name: zaproxy/zap-stable
+    entrypoint: [""]
+  tags:
+    - linux
+    - bas2301
+  script:
+    - apt-get update && apt-get install -y openjdk-21-jre
+    - java -jar target/*.jar &
+    - sleep 30
+    - zap-baseline.py -t http://localhost:8080 -c zap-rules.tsv -r zap-report.html || true
+  artifacts:
+    paths:
+      - zap-report.html
     expire_in: 1 week
