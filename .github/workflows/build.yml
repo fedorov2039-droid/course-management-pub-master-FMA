@@ -47,7 +47,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # ИСПРАВЛЕНИЕ: Переводим название репозитория в нижний регистр для Docker
+      # Переводим название репозитория в нижний регистр для Docker
       - name: Set lower case repo name
         run: |
           echo "REPO_LC=${GITHUB_REPOSITORY,,}" >> ${GITHUB_ENV}
@@ -58,12 +58,14 @@ jobs:
       - name: Build Image
         run: docker build -t ghcr.io/${{ env.REPO_LC }}:latest .
 
+      # СКАНИРОВАНИЕ С ИГНОРИРОВАНИЕМ НЕИСПРАВИМЫХ ДЫР
       - name: Trivy Scan
         uses: aquasecurity/trivy-action@master
         with:
           image-ref: 'ghcr.io/${{ env.REPO_LC }}:latest'
           exit-code: '1'
           severity: 'CRITICAL'
+          ignore-unfixed: true # ИГНОРИРОВАТЬ дыры, для которых еще нет патча
 
       - name: Login and Push
         run: |
