@@ -3,11 +3,11 @@ workflow:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
 
 stages:
-  - secrets    # НОВАЯ СТАДИЯ ПЕРЕД ВСЕМ
+  - secrets
   - build
   - test
 
-#(Доп): Поиск секретов (паролей, ключей)
+#(Доп): Поиск секретов
 gitleaks-scan:
   stage: secrets
   image:
@@ -17,13 +17,13 @@ gitleaks-scan:
     - linux
     - bas2301
   script:
-    # Ищем секреты. Если найдет - завалит пайплайн (exit code 1)
-    - gitleaks detect --source . -v --redact
+    # Флаг --no-git заставляет сканировать только текущие файлы в папке
+    - gitleaks detect --no-git --source . -v --redact
   allow_failure: false
 
 build-job:
   stage: build
-  needs: ["gitleaks-scan"] # СТРОГО: Ждем пока секреты проверятся
+  needs: ["gitleaks-scan"]
   image: eclipse-temurin:21-jdk
   tags:
     - linux

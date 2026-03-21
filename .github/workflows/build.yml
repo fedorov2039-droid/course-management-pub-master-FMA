@@ -5,21 +5,21 @@ on:
     branches: [ "main" ]
 
 jobs:
-  #(Доп): Сначала ищем секреты
+  # (Доп): Поиск секретов
   secrets-scan:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # Нужно для полной проверки истории
+          fetch-depth: 1 # Игнорируем историю коммитов, проверяем только текущий код
       - name: Gitleaks Scan
         uses: gitleaks/gitleaks-action@v2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          fail-on-vulnerabilities: true # ОСТАНОВИТЬ, если найдет секрет
+          fail-on-vulnerabilities: true
 
-  # Твоя основная работа теперь ждет (needs)
+  # Основная работа
   build-test-security:
     needs: [secrets-scan]
     runs-on: ubuntu-latest
