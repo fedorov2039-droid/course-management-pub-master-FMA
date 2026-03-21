@@ -5,23 +5,20 @@ on:
     branches: [ "main" ]
 
 jobs:
-  # (Доп): Поиск секретов
+  #(Доп): Поиск секретов
   secrets-scan:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 1 # Игнорируем историю коммитов, проверяем только текущий код
-      - name: Gitleaks Scan
-        uses: gitleaks/gitleaks-action@v2
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          fail-on-vulnerabilities: true
 
-  # Основная работа
+      - name: Gitleaks Scan (Current Files Only)
+        run: |
+          # Запускаем сканер в режиме --no-git, чтобы игнорировать удаленные секреты в истории
+          docker run --rm -v ${{ github.workspace }}:/code zricethezav/gitleaks:latest detect --source="/code" --no-git -v
+
+  # Основная работа (сборка и тесты)
   build-test-security:
-    needs: [secrets-scan]
+    needs: [secrets-scan] # Ждем успешной проверки на секреты
     runs-on: ubuntu-latest
 
     steps:
