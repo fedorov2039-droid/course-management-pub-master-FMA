@@ -3,11 +3,27 @@ workflow:
     - if: '$CI_PIPELINE_SOURCE == "merge_request_event" && $CI_MERGE_REQUEST_TARGET_BRANCH_NAME == "main"'
 
 stages:
+  - secrets    # НОВАЯ СТАДИЯ ПЕРЕД ВСЕМ
   - build
   - test
 
+#(Доп): Поиск секретов (паролей, ключей)
+gitleaks-scan:
+  stage: secrets
+  image:
+    name: zricethezav/gitleaks
+    entrypoint: [""]
+  tags:
+    - linux
+    - bas2301
+  script:
+    # Ищем секреты. Если найдет - завалит пайплайн (exit code 1)
+    - gitleaks detect --source . -v --redact
+  allow_failure: false
+
 build-job:
   stage: build
+  needs: ["gitleaks-scan"] # СТРОГО: Ждем пока секреты проверятся
   image: eclipse-temurin:21-jdk
   tags:
     - linux
@@ -45,7 +61,6 @@ sca-dependency-check:
     paths:
       - target/dependency-check-report.html
 
-# пзха 5: DAST (Динамический анализ)
 dast-zap:
   stage: test
   image:
