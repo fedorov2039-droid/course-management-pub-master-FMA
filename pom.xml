@@ -63,7 +63,6 @@
             <artifactId>spring-boot-starter-test</artifactId>
             <scope>test</scope>
         </dependency>
-
     </dependencies>
 
     <build>
@@ -94,7 +93,28 @@
                     </excludes>
                 </configuration>
             </plugin>
+
+            <!-- ПЛАГИН ДЛЯ ЛАБЫ №4 (SCA) С ИСПРАВЛЕНИЕМ ОШИБОК 401/429 -->
+            <plugin>
+                <groupId>org.owasp</groupId>
+                <artifactId>dependency-check-maven</artifactId>
+                <version>12.1.0</version>
+                <configuration>
+                    <formats>
+                        <format>HTML</format>
+                    </formats>
+                    <!-- ОТКЛЮЧАЕМ анализатор Sonatype OSS Index, который вызывает сбои в облаке -->
+                    <ossIndexAnalyzerEnabled>false</ossIndexAnalyzerEnabled>
+                    <failOnError>false</failOnError>
+                </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
-
 </project>
